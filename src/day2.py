@@ -3,13 +3,7 @@ from dataclasses import dataclass
 from functools import reduce
 from multiprocessing.pool import Pool
 
-EXAMPLE = (
-    "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green",
-    "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue",
-    "Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red",
-    "Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red",
-    "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green",
-)
+from src import get_file_content
 
 
 @dataclass
@@ -54,6 +48,12 @@ def parse_game(game_info: str) -> Game:
     )
 
 
+def file_to_games(file_name: str, pool: Pool) -> list[Game]:
+    content = get_file_content(file_name)
+
+    return list(pool.map(parse_game, content.split('\n')))
+
+
 def get_max_game_id(game: Game) -> int:
     success = all(
         MAX_COLORS_TURN[color] >= number
@@ -62,10 +62,6 @@ def get_max_game_id(game: Game) -> int:
     )
 
     return game.id if success else 0
-
-
-def part1(games: Iterable[Game], pool: Pool) -> int:
-    return sum(pool.map(get_max_game_id, games))
 
 
 def get_min_turn(t1: Turn, t2: Turn) -> Turn:
@@ -81,16 +77,19 @@ def get_cubes_power(game: Game) -> int:
     return min_turn.red * min_turn.green * min_turn.blue
 
 
+def part1(games: Iterable[Game], pool: Pool) -> int:
+    return sum(pool.map(get_max_game_id, games))
+
+
 def part2(games: Iterable[Game], pool: Pool) -> int:
     return sum(pool.map(get_cubes_power, games))
 
 
-def day2(text: str):
+def day2():
     pool = Pool()
 
-    lines = text.split('\n')
-    games = list(pool.map(parse_game, lines))
-    example_games = list(pool.map(parse_game, EXAMPLE))
+    games = file_to_games("input2", pool)
+    example_games = file_to_games("example2", pool)
 
     assert part1(example_games, pool) == 8
     assert part1(games, pool) == 2285

@@ -1,59 +1,68 @@
 import re
 from collections import OrderedDict
+from collections.abc import Iterable, Callable
 
-EXAMPLES = [
-    (["1abc2", "pqr3stu8vwx", "a1b2c3d4e5f", "treb7uchet"], False, 142),
-    (["two1nine", "eightwothree", "abcone2threexyz", "xtwone3four", "4nineeightseven2", "zoneight234", "7pqrstsixteen"], True, 281)
-]
+from src import get_file_content
 
 SPELLED_NUMBERS = (
     "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
 )
 
 
-def spelled_number_to_digit(s: str) -> int:
-    return SPELLED_NUMBERS.index(s) + 1
-
-
-def get_spelled_indices(line: str) -> dict[int, int]:
-    return {
-        index.start(): spelled_number_to_digit(spelled_number)
-        for spelled_number in SPELLED_NUMBERS
-        for index in re.finditer(pattern=spelled_number, string=line)
-    }
+def file_to_lines(file_name: str) -> list[str]:
+    return get_file_content(file_name).split('\n')
 
 
 def get_digits_indices(line: str) -> dict[int, int]:
     return {index: int(char) for index, char in enumerate(line) if char.isdigit()}
 
 
-def line_to_calibration(line: str, spelled: bool) -> int:
-    number_indices = get_digits_indices(line)
-    if spelled:
-        number_indices |= get_spelled_indices(line)
+def get_spelled_indices(line: str) -> dict[int, int]:
+    return {
+        index.start(): SPELLED_NUMBERS.index(spelled_number) + 1
+        for spelled_number in SPELLED_NUMBERS
+        for index in re.finditer(pattern=spelled_number, string=line)
+    }
+
+
+def line_to_calibration(
+    line: str, parse_functions: Iterable[Callable[[str], dict[int, int]]]
+) -> int:
+    number_indices = {}
+    for parse_function in parse_functions:
+        number_indices |= parse_function(line)
 
     numbers = list(OrderedDict(sorted(number_indices.items())).values())
 
     return int(f"{numbers[0]}{numbers[-1]}")
 
 
-def run(lines: list[str], spelled: bool) -> int:
-    calibrations = map(lambda line: line_to_calibration(line, spelled), lines)
+def part1(lines: list[str]) -> int:
+    calibrations = map(
+        lambda line: line_to_calibration(line, [get_digits_indices]), lines
+    )
 
     return sum(calibrations)
 
 
-def day1(text: str):
-    for ex in EXAMPLES:
-        assert run(ex[0], ex[1]) == ex[2]
+def part2(lines: list[str]) -> int:
+    calibrations = map(
+        lambda line: line_to_calibration(
+            line, [get_digits_indices, get_spelled_indices]
+        ), lines
+    )
 
-    lines = text.split('\n')
+    return sum(calibrations)
 
-    r1 = run(lines, False)
-    assert r1 == 55816
 
-    test = run(["twone"], True)
-    assert test == 21
+def day1():
+    puzzle_lines = file_to_lines("input1")
+    example1_lines = file_to_lines("example1-1")
+    example2_lines = file_to_lines("example1-2")
 
-    r2 = run(lines, True)
-    assert r2 == 54980
+    assert part1(example1_lines) == 142
+    assert part1(puzzle_lines) == 55816
+
+    assert part2(["twone"]) == 21
+    assert part2(example2_lines) == 281
+    assert part2(puzzle_lines) == 54980

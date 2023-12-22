@@ -1,6 +1,11 @@
 import re
 from collections import OrderedDict
 
+EXAMPLES = [
+    (["1abc2", "pqr3stu8vwx", "a1b2c3d4e5f", "treb7uchet"], False, 142),
+    (["two1nine", "eightwothree", "abcone2threexyz", "xtwone3four", "4nineeightseven2", "zoneight234", "7pqrstsixteen"], True, 281)
+]
+
 SPELLED_NUMBERS = (
     "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
 )
@@ -32,31 +37,23 @@ def line_to_calibration(line: str, spelled: bool) -> int:
     return int(f"{numbers[0]}{numbers[-1]}")
 
 
-def day1(lines: list[str], spelled: bool) -> int:
+def run(lines: list[str], spelled: bool) -> int:
     calibrations = map(lambda line: line_to_calibration(line, spelled), lines)
 
     return sum(calibrations)
 
 
-EXAMPLES = [
-    (["1abc2", "pqr3stu8vwx", "a1b2c3d4e5f", "treb7uchet"], False, 142),
-    (["two1nine", "eightwothree", "abcone2threexyz", "xtwone3four", "4nineeightseven2", "zoneight234", "7pqrstsixteen"], True, 281)
-]
-
-if __name__ == '__main__':
+def day1(text: str):
     for ex in EXAMPLES:
-        assert day1(ex[0], ex[1]) == ex[2]
+        assert run(ex[0], ex[1]) == ex[2]
 
-    with open("data/2023/input1.txt") as f:
-        text = f.read()
+    lines = text.split('\n')
 
-    lines = [line for line in text.split('\n') if line]
-
-    r1 = day1(lines, False)
+    r1 = run(lines, False)
     assert r1 == 55816
 
-    test = day1(["twone"], True)
+    test = run(["twone"], True)
     assert test == 21
 
-    r2 = day1(lines, True)
+    r2 = run(lines, True)
     assert r2 == 54980

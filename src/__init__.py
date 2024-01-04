@@ -1,2 +1,6 @@
+from pathlib import Path
+
+
 def get_file_content(name: str) -> str:
-    return open(f"data/2023/{name}.txt", encoding="utf-8").read().rstrip('\n')
+    with Path(f"data/2023/{name}.txt").open(encoding="utf-8") as f:
+        return f.read().rstrip("\n")

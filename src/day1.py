@@ -1,16 +1,27 @@
 import re
 from collections import OrderedDict
-from collections.abc import Iterable, Callable
+from typing import TYPE_CHECKING
 
 from src import get_file_content
 
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
 SPELLED_NUMBERS = (
-    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
 )
 
 
 def file_to_lines(file_name: str) -> list[str]:
-    return get_file_content(file_name).split('\n')
+    return get_file_content(file_name).split("\n")
 
 
 def get_digits_indices(line: str) -> dict[int, int]:
@@ -19,14 +30,14 @@ def get_digits_indices(line: str) -> dict[int, int]:
 
 def get_spelled_indices(line: str) -> dict[int, int]:
     return {
-        index.start(): SPELLED_NUMBERS.index(spelled_number) + 1
+        match.start(): SPELLED_NUMBERS.index(spelled_number) + 1
         for spelled_number in SPELLED_NUMBERS
-        for index in re.finditer(pattern=spelled_number, string=line)
+        for match in re.finditer(pattern=spelled_number, string=line)
     }
 
 
 def line_to_calibration(
-    line: str, parse_functions: Iterable[Callable[[str], dict[int, int]]]
+    line: str, parse_functions: "Iterable[Callable[[str], dict[int, int]]]"
 ) -> int:
     number_indices = {}
     for parse_function in parse_functions:
@@ -38,24 +49,21 @@ def line_to_calibration(
 
 
 def part1(lines: list[str]) -> int:
-    calibrations = map(
-        lambda line: line_to_calibration(line, [get_digits_indices]), lines
-    )
+    calibrations = (line_to_calibration(line, [get_digits_indices]) for line in lines)
 
     return sum(calibrations)
 
 
 def part2(lines: list[str]) -> int:
-    calibrations = map(
-        lambda line: line_to_calibration(
-            line, [get_digits_indices, get_spelled_indices]
-        ), lines
+    calibrations = (
+        line_to_calibration(line, [get_digits_indices, get_spelled_indices])
+        for line in lines
     )
 
     return sum(calibrations)
 
 
-def day1():
+def day1() -> None:
     puzzle_lines = file_to_lines("input1")
     example1_lines = file_to_lines("example1-1")
     example2_lines = file_to_lines("example1-2")
